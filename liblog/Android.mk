@@ -70,6 +70,9 @@ endif
 LOCAL_MULTILIB := both
 include $(BUILD_HOST_SHARED_LIBRARY)
 
+ifeq ($(TARGET_USES_MOTOROLA_LOG),true)
+LIBLOG_CFLAGS := -DMOTOROLA_LOG
+endif
 
 ifeq ($(TARGET_USES_HUAWEI_LOG),true)
 LIBLOG_CFLAGS := -DHUAWEI_LOG
@@ -78,12 +81,14 @@ endif
 # Shared and static library for target
 # ========================================================
 include $(CLEAR_VARS)
+LOCAL_CFLAGS += $(LIBLOG_CFLAGS)
 LOCAL_MODULE := liblog
 LOCAL_SRC_FILES := $(liblog_target_sources)
 LOCAL_CFLAGS := -Os -std=gnu89
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
+LOCAL_CFLAGS += $(LIBLOG_CFLAGS)
 LOCAL_MODULE := liblog
 LOCAL_WHOLE_STATIC_LIBRARIES := liblog
 LOCAL_CFLAGS := -Os -std=gnu89
