@@ -9,7 +9,7 @@ LOCAL_SHARED_LIBRARIES := liblog
 
 LOCAL_MODULE := logcat
 
-LOCAL_CFLAGS := -Werror
+LOCAL_CFLAGS := -Os -std=gnu89
 
 include $(BUILD_EXECUTABLE)
 
