@@ -808,6 +808,27 @@ static void handle_generic_device_event(struct uevent *uevent)
          base = "/dev/log/";
          make_dir(base, 0755);
          name += 4;
+     } else if (!strncmp(uevent->subsystem, "dvb", 3)) {
+         /* This imitates the file system that would be created
+          * if we were using devfs instead to preserve backward compatibility
+          * for users of dvb devices
+          */
+         int adapter_id;
+         char dev_name[20] = {0};
+
+         sscanf(name, "dvb%d.%s", &adapter_id, dev_name);
+
+         /* build dvb directory */
+         base = "/dev/dvb";
+         mkdir(base, 0755);
+
+         /* build adapter directory */
+         snprintf(devpath, sizeof(devpath), "/dev/dvb/adapter%d", adapter_id);
+         mkdir(devpath, 0755);
+
+         /* build actual device directory */
+         snprintf(devpath, sizeof(devpath), "/dev/dvb/adapter%d/%s",
+                  adapter_id, dev_name);
      } else
          base = "/dev/";
      links = get_character_device_symlinks(uevent);
@@ -835,29 +856,7 @@ static void handle_device_event(struct uevent *uevent)
 
 static int load_firmware(int fw_fd, gzFile gz_fd, int loading_fd, int data_fd)
 {
-    struct stat st;
-    long len_to_copy;
     int ret = 0;
-
-    if(fstat(fw_fd, &st) < 0)
-        return -1;
-    len_to_copy = st.st_size;
-
-    if (S_ISBLK(st.st_mode)) {
-        //File points to a block device. Need to calculate it's size
-        //manually
-        len_to_copy = lseek64(fw_fd, 0, SEEK_END);
-        if (len_to_copy < 0) {
-            ERROR("Failed to get size of blk device partition: %s\n",
-                             strerror(errno));
-            return -1;
-        }
-        if (lseek64(fw_fd, 0, SEEK_SET) < 0) {
-            ERROR("Failed to set r/w offset for blk device partition: %s\n",
-                             strerror(errno));
-            return -1;
-        }
-    }
 
     write(loading_fd, "1", 1);  /* start transfer */
 
